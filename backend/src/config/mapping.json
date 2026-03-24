@@ -1,0 +1,207 @@
+{
+    "in_tables": [
+        {
+            "master_table": "actor",
+            "slave_table": "actor",
+            "pk": "actor_id",
+            "fields": [
+                "actor_id",
+                "first_name",
+                "last_name",
+                "last_update"
+            ]
+        },
+        {
+            "master_table": "category",
+            "slave_table": "category",
+            "pk": "category_id",
+            "fields": [
+                "category_id",
+                "name",
+                "last_update"
+            ]
+        },
+        {
+            "master_table": "language",
+            "slave_table": "language",
+            "pk": "language_id",
+            "fields": [
+                "language_id",
+                "name",
+                "last_update"
+            ]
+        },
+        {
+            "master_table": "country",
+            "slave_table": "country",
+            "pk": "country_id",
+            "fields": [
+                "country_id",
+                "country",
+                "last_update"
+            ]
+        },
+        {
+            "master_table": "city",
+            "slave_table": "city",
+            "pk": "city_id",
+            "fields": [
+                "city_id",
+                "city",
+                "country_id",
+                "last_update"
+            ]
+        },
+        {
+            "master_table": "address",
+            "slave_table": "address",
+            "pk": "address_id",
+            "fields": [
+                "address_id",
+                "address",
+                "address2",
+                "district",
+                "city_id",
+                "postal_code",
+                "phone",
+                "last_update"
+            ]
+        },
+        {
+            "master_table": "film",
+            "slave_table": "film",
+            "pk": "film_id",
+            "fields": [
+                "film_id",
+                "title",
+                "description",
+                "release_year",
+                "language_id",
+                "original_language_id",
+                "rental_duration",
+                "rental_rate",
+                "length",
+                "replacement_cost",
+                "rating",
+                "special_features",
+                "last_update"
+            ],
+            "transform": {
+                "special_features": "array_to_json"
+            }
+        },
+        {
+            "master_table": "film_actor",
+            "slave_table": "film_actor",
+            "pk": [
+                "actor_id",
+                "film_id"
+            ],
+            "fields": [
+                "actor_id",
+                "film_id",
+                "last_update"
+            ]
+        },
+        {
+            "master_table": "film_category",
+            "slave_table": "film_category",
+            "pk": [
+                "film_id",
+                "category_id"
+            ],
+            "fields": [
+                "film_id",
+                "category_id",
+                "last_update"
+            ]
+        },
+        {
+            "master_table": "store",
+            "slave_table": "store",
+            "pk": "store_id",
+            "fields": [
+                "store_id",
+                "manager_staff_id",
+                "address_id",
+                "last_update"
+            ]
+        },
+        {
+            "master_table": "staff",
+            "slave_table": "staff",
+            "pk": "staff_id",
+            "fields": [
+                "staff_id",
+                "first_name",
+                "last_name",
+                "address_id",
+                "email",
+                "store_id",
+                "active",
+                "username",
+                "last_update"
+            ]
+        },
+        {
+            "master_table": "inventory",
+            "slave_table": "inventory",
+            "pk": "inventory_id",
+            "fields": [
+                "inventory_id",
+                "film_id",
+                "store_id",
+                "last_update"
+            ]
+        }
+    ],
+    "out_tables": [
+        {
+            "slave_table": "customer",
+            "master_table": "customer",
+            "log_table": "customer_log",
+            "pk": "customer_id",
+            "fields": [
+                "customer_id",
+                "store_id",
+                "first_name",
+                "last_name",
+                "email",
+                "address_id",
+                "active",
+                "create_date",
+                "last_update"
+            ]
+        },
+        {
+            "slave_table": "rental",
+            "master_table": "rental",
+            "log_table": "rental_log",
+            "pk": "rental_id",
+            "fields": [
+                "rental_id",
+                "rental_date",
+                "inventory_id",
+                "customer_id",
+                "return_date",
+                "staff_id",
+                "last_update"
+            ]
+        },
+        {
+            "slave_table": "payment",
+            "master_table": "payment",
+            "log_table": "payment_log",
+            "pk": "payment_id",
+            "fields": [
+                "payment_id",
+                "customer_id",
+                "staff_id",
+                "rental_id",
+                "amount",
+                "payment_date",
+                "last_update"
+            ]
+        }
+    ]
+}
