@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:15-alpine
@@ -17,7 +15,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${PG_USER}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   mysql:
     image: mysql:8.0
@@ -32,26 +30,27 @@ services:
     volumes:
       - ./database/mysql:/docker-entrypoint-initdb.d
       - mysql_data:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password
+    # NOTA: --default-authentication-plugin eliminado (deprecado en MySQL 8.0.34+)
+    # NOTA: --skip-host-cache viene del entrypoint base, no es controlable aqui
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   backend:
     build: ./backend
     container_name: sync_backend
     environment:
-      - PG_USER=${PG_USER}
-      - PG_PASSWORD=${PG_PASSWORD}
-      - PG_DB=${PG_DB}
-      - PG_HOST=postgres
-      - MYSQL_HOST=mysql
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DB=${MYSQL_DB}
-      - PORT=3000
+      PG_USER: ${PG_USER}
+      PG_PASSWORD: ${PG_PASSWORD}
+      PG_DB: ${PG_DB}
+      PG_HOST: postgres
+      MYSQL_HOST: mysql
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DB: ${MYSQL_DB}
+      PORT: 3000
     ports:
       - "3000:3000"
     depends_on:
@@ -59,8 +58,6 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    volumes:
-      - ./backend/src:/app/src
 
   frontend:
     build: ./frontend
