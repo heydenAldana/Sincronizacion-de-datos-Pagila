@@ -1,118 +1,87 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Sincronizador Pagila</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
-    <div class="container mt-4">
-        <h1 class="text-center">Sincronizador de Datos Pagila</h1>
-
-        <!-- Botones de sincronización -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <button id="syncInBtn" class="btn btn-primary w-100">Sincronizar IN (Master → Slave)</button>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-dark">
+            <div class="sidebar-header">
+                <h3>Sincronizador</h3>
             </div>
-            <div class="col-md-6">
-                <button id="syncOutBtn" class="btn btn-success w-100">Sincronizar OUT (Slave → Master)</button>
-            </div>
-        </div>
+            <ul class="list-unstyled components">
+                <li class="active">
+                    <a href="#dashboard" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <ul class="collapse list-unstyled show" id="dashboard">
+                        <li><a href="#" data-section="dashboard">Inicio</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#slaveTables" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                        <i class="bi bi-database"></i> Tablas Slave (MySQL)
+                    </a>
+                    <ul class="collapse list-unstyled" id="slaveTables">
+                        <li><a href="#" data-section="slave" data-table="customer">Clientes</a></li>
+                        <li><a href="#" data-section="slave" data-table="rental">Rentas</a></li>
+                        <li><a href="#" data-section="slave" data-table="payment">Pagos</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#masterTables" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                        <i class="bi bi-database"></i> Tablas Master (PostgreSQL)
+                    </a>
+                    <ul class="collapse list-unstyled" id="masterTables">
+                        <li><a href="#" data-section="master" data-table="customer">Clientes</a></li>
+                        <li><a href="#" data-section="master" data-table="rental">Rentas</a></li>
+                        <li><a href="#" data-section="master" data-table="payment">Pagos</a></li>
+                        <li><a href="#" data-section="master" data-table="film">Películas</a></li>
+                        <li><a href="#" data-section="master" data-table="actor">Actores</a></li>
+                        <li><a href="#" data-section="master" data-table="category">Categorías</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#sync" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                        <i class="bi bi-arrow-repeat"></i> Sincronización
+                    </a>
+                    <ul class="collapse list-unstyled" id="sync">
+                        <li><a href="#" data-section="sync">Ejecutar Sincronización</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <!-- Page Content -->
+        <div id="content">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-dark">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <span class="navbar-brand ms-2">Sincronizador de Datos Pagila</span>
+                </div>
+            </nav>
 
-        <!-- Estado y logs -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Estado de Sincronización</div>
-                    <div class="card-body" id="status">
-                        Cargando...
+            <div class="container-fluid mt-3">
+                <div id="mainContent">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Últimos Logs</div>
-                    <div class="card-body" id="logs">
-                        <pre id="logContent">No hay logs aún.</pre>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pestañas CRUD -->
-        <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="customers-tab" data-bs-toggle="tab" data-bs-target="#customers"
-                    type="button" role="tab">Clientes</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="rentals-tab" data-bs-toggle="tab" data-bs-target="#rentals" type="button"
-                    role="tab">Rentas</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button"
-                    role="tab">Pagos</button>
-            </li>
-        </ul>
-        <div class="tab-content mt-3">
-            <div class="tab-pane fade show active" id="customers" role="tabpanel">
-                <button class="btn btn-sm btn-success mb-2" id="addCustomerBtn">Agregar Cliente</button>
-                <table class="table table-striped" id="customersTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Apellido</th>
-                            <th>Email</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-            <div class="tab-pane fade" id="rentals" role="tabpanel">
-                <button class="btn btn-sm btn-success mb-2" id="addRentalBtn">Agregar Renta</button>
-                <table class="table table-striped" id="rentalsTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Fecha</th>
-                            <th>Inventario ID</th>
-                            <th>Cliente ID</th>
-                            <th>Fecha Retorno</th>
-                            <th>Staff ID</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-            <div class="tab-pane fade" id="payments" role="tabpanel">
-                <button class="btn btn-sm btn-success mb-2" id="addPaymentBtn">Agregar Pago</button>
-                <table class="table table-striped" id="paymentsTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Cliente ID</th>
-                            <th>Staff ID</th>
-                            <th>Renta ID</th>
-                            <th>Monto</th>
-                            <th>Fecha Pago</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
             </div>
         </div>
     </div>
 
-    <!-- Modal para formularios -->
-    <div class="modal fade" id="formModal" tabindex="-1">
+    <!-- Modal para CRUD -->
+    <div class="modal fade" id="crudModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -120,13 +89,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="dataForm">
-                        <!-- Los campos se llenan dinámicamente con JS -->
+                    <form id="crudForm">
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="saveBtn">Guardar</button>
+                    <button type="button" class="btn btn-primary" id="saveCrudBtn">Guardar</button>
                 </div>
             </div>
         </div>
@@ -134,7 +102,31 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/dashboard.js"></script>
-    <script src="js/crud.js"></script>
-</body>
+    <script src="js/slave.js"></script>
+    <script src="js/master.js"></script>
+    <script src="js/sync.js"></script>
+    <script>
+        // Sidebar toggle
+        document.getElementById('sidebarCollapse').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+        // Navegación
+        document.querySelectorAll('#sidebar a[data-section]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = link.dataset.section;
+                const table = link.dataset.table;
+                if (section === 'dashboard') loadDashboard();
+                else if (section === 'slave') loadSlaveTable(table);
+                else if (section === 'master') loadMasterTable(table);
+                else if (section === 'sync') loadSyncPanel();
+                // Marcar activo
+                document.querySelectorAll('#sidebar li').forEach(li => li.classList.remove('active'));
+                link.closest('li').classList.add('active');
+            });
+        });
 
+        loadDashboard();
+    </script>
+</body>
 </html>

@@ -1,42 +1,86 @@
-const API_BASE = '/api';
+async function loadDashboard() {
+    const main = document.getElementById('mainContent');
+    main.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle"></i> Estado de Sincronización
+                    </div>
+                    <div class="card-body" id="syncStatus">
+                        Cargando...
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-file-text"></i> Últimos Logs
+                    </div>
+                    <div class="card-body">
+                        <pre id="logContent">Cargando logs...</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-graph-up"></i> Actividad Reciente
+                    </div>
+                    <div class="card-body">
+                        <p>Aquí se mostrarán estadísticas de sincronización (próximamente).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    await updateSyncStatus();
+    await loadLogs();
+}
 
-async function fetchStatus() {
+async function updateSyncStatus() {
     try {
-        const response = await fetch(`${API_BASE}/health`);
-        const data = await response.json();
-        document.getElementById('status').innerHTML = `<p>Backend: ${data.status}</p><p>Última sincronización: ${new Date().toLocaleString()}</p>`;
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        const lastSync = localStorage.getItem('lastSyncIn') || 'No realizada';
+        const pendingOut = await getPendingOutCount();
+        document.getElementById('syncStatus').innerHTML = `
+            <p><strong>Backend:</strong> ${data.status}</p>
+            <p><strong>Última Sync-IN:</strong> ${lastSync}</p>
+            <p><strong>Registros pendientes OUT:</strong> ${pendingOut}</p>
+        `;
     } catch (error) {
-        document.getElementById('status').innerHTML = '<p class="text-danger">Error conectando al backend</p>';
+        document.getElementById('syncStatus').innerHTML = '<p class="text-danger">Error conectando al backend</p>';
     }
 }
 
-async function fetchLogs() {
+async function getPendingOutCount() {
     try {
-        const response = await fetch(`${API_BASE}/sync/logs`); // Este endpoint no está implementado, se puede omitir o crear uno para leer el archivo de log
-        if (response.ok) {
-            const logs = await response.text();
-            document.getElementById('logContent').innerText = logs;
-        } else {
-            document.getElementById('logContent').innerText = 'No se pudieron cargar los logs.';
+        const tables = ['customer', 'rental', 'payment'];
+        let total = 0;
+        for (const table of tables) {
+            const res = await fetch(`/api/out/${table}_log/count`); // endpoint no implementado, se puede agregar
+            if (res.ok) {
+                const data = await res.json();
+                total += data.count;
+            } else {
+                total = '?';
+            }
         }
-    } catch (error) {
+        return total;
+    } catch {
+        return '?';
+    }
+}
+
+async function loadLogs() {
+    try {
+        const res = await fetch('/api/sync/logs');
+        const logs = await res.text();
+        document.getElementById('logContent').innerText = logs || 'No hay logs aún.';
+    } catch {
         document.getElementById('logContent').innerText = 'Error cargando logs.';
     }
 }
-
-document.getElementById('syncInBtn').addEventListener('click', async () => {
-    const response = await fetch(`${API_BASE}/sync/in`, { method: 'POST' });
-    const result = await response.json();
-    alert(result.message || result.error);
-    fetchLogs();
-});
-
-document.getElementById('syncOutBtn').addEventListener('click', async () => {
-    const response = await fetch(`${API_BASE}/sync/out`, { method: 'POST' });
-    const result = await response.json();
-    alert(result.message || result.error);
-    fetchLogs();
-});
-
-fetchStatus();
-fetchLogs();
