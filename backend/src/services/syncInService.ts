@@ -9,6 +9,8 @@ export async function syncIn() {
     await connection.beginTransaction();
 
     try {
+        await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+
         for (const table of syncInOrder) {
             const map = mapping.tables[table];
             if (!map) {
@@ -16,7 +18,6 @@ export async function syncIn() {
                 continue;
             }
 
-            // Obtener datos de PostgreSQL
             const postgresFields = map.postgres_fields.join(', ');
             const { rows } = await pgPool.query(`SELECT ${postgresFields} FROM ${table}`);
 
@@ -31,22 +32,16 @@ export async function syncIn() {
             const query = `INSERT INTO ${table} (${mysqlFields}) VALUES (${placeholders}) ON DUPLICATE KEY UPDATE ${updateClause}`;
 
             for (const row of rows) {
-                // Mapear valores según el orden de los campos MySQL
-                const values = map.mysql_fields.map(field => {
-                    let val = row[field];
-                    // Convertir tipos si es necesario
-                    if (field === 'activebool' && table === 'customer') {
-                        val = val === true ? 1 : 0;
-                    }
-                    return val;
-                });
+                const values = map.mysql_fields.map(field => row[field]);
                 await connection.query(query, values);
             }
         }
 
+        await connection.query('SET FOREIGN_KEY_CHECKS = 1');
         await connection.commit();
         logInfo('Sync-IN completed successfully');
     } catch (error: any) {
+        await connection.query('SET FOREIGN_KEY_CHECKS = 1');
         await connection.rollback();
         logError(`Sync-IN failed: ${error.message}`);
         throw error;
