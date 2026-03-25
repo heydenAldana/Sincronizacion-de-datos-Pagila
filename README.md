@@ -5,16 +5,16 @@ El proyecto consiste en crear un aplicativo que implemente la dinámica de sincr
 ## Como ejecutar el proyecto
 
 * Paso 1: clonar el proyecto: 
-´´´ 
+``` 
 git clone https://github.com/heydenAldana/Sincronizacion-de-datos-Pagila.git
-´´´ 
+``` 
 * Paso 2: ejecutar en tu terminal o IDE preferido en el directorio raiz:
-´´´ 
+``` 
 docker-compose up --build # Docker
 podman compose up --build # Podman
-´´´ 
+``` 
 * Paso 3: abrir un navegador y poner:
-´´´ 
+``` 
 http://localhost:5000/
-´´´ 
+``` 
 * Paso 4: Navegar por la interfaz
