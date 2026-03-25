@@ -14,7 +14,9 @@ async function loadSlaveTable(table) {
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-striped" id="slaveTable">
-                        <thead><tr></tr></thead>
+                        <thead>\
+                            <tr></tr>\
+                        </thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -26,10 +28,16 @@ async function loadSlaveTable(table) {
 }
 
 async function fetchSlaveData() {
-    const res = await fetch(`/api/out/${currentSlaveTable}`);
-    const data = await res.json();
-    currentSlaveData = data;
-    renderSlaveTable(data);
+    try {
+        const res = await fetch(`/api/out/${currentSlaveTable}`);
+        if (!res.ok) throw new Error('Error fetching data');
+        const data = await res.json();
+        currentSlaveData = data;
+        renderSlaveTable(data);
+    } catch (error) {
+        console.error(error);
+        document.querySelector('#slaveTable tbody').innerHTML = '<tr><td colspan="100">Error cargando datos</td></tr>';
+    }
 }
 
 function renderSlaveTable(data) {
@@ -40,13 +48,17 @@ function renderSlaveTable(data) {
         return;
     }
     const columns = Object.keys(data[0]);
-    thead.innerHTML = columns.map(col => `<th>${col}</th><th>Acciones</th>`).join('');
+    thead.innerHTML = columns.map(col => `<th>${col}</th>`).join('') + '<th>Acciones</th>';
     tbody.innerHTML = data.map(row => {
         const cells = columns.map(col => `<td>${row[col] ?? ''}</td>`).join('');
-        return `<tr>${cells}<td>
-            <button class="btn btn-sm btn-primary me-1" onclick="editSlaveRow(${row[columns[0]]})"><i class="bi bi-pencil"></i></button>
-            <button class="btn btn-sm btn-danger" onclick="deleteSlaveRow(${row[columns[0]]})"><i class="bi bi-trash"></i></button>
-        </td></tr>`;
+        const pk = columns[0];
+        return `<tr>
+            ${cells}
+            <td>
+                <button class="btn btn-sm btn-primary me-1" onclick="editSlaveRow(${row[pk]})"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="deleteSlaveRow(${row[pk]})"><i class="bi bi-trash"></i></button>
+            </td>
+        </tr>`;
     }).join('');
 }
 
@@ -55,7 +67,7 @@ function openSlaveForm(id = null) {
     const modal = new bootstrap.Modal(document.getElementById('crudModal'));
     const form = document.getElementById('crudForm');
     form.innerHTML = '';
-    // Obtener la estructura de campos según la tabla
+
     let fields = [];
     if (currentSlaveTable === 'customer') {
         fields = [
@@ -83,6 +95,7 @@ function openSlaveForm(id = null) {
             { name: 'payment_date', type: 'datetime-local', label: 'Fecha Pago', required: true }
         ];
     }
+
     fields.forEach(f => {
         const div = document.createElement('div');
         div.className = 'mb-3';
@@ -109,6 +122,7 @@ function openSlaveForm(id = null) {
         div.appendChild(input);
         form.appendChild(div);
     });
+
     if (id) {
         const row = currentSlaveData.find(r => r[Object.keys(r)[0]] == id);
         if (row) {
@@ -126,6 +140,7 @@ function openSlaveForm(id = null) {
             }
         }
     }
+
     document.getElementById('saveCrudBtn').onclick = () => saveSlaveForm();
     modal.show();
 }
@@ -138,30 +153,40 @@ async function saveSlaveForm() {
         if (key === 'active') value = value === 'on' ? 1 : 0;
         data[key] = value;
     }
+
     let url = `/api/out/${currentSlaveTable}`;
     let method = 'POST';
     if (editId) {
         url += `/${editId}`;
         method = 'PUT';
     }
-    const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    if (res.ok) {
-        bootstrap.Modal.getInstance(document.getElementById('crudModal')).hide();
-        fetchSlaveData();
-    } else {
-        alert('Error al guardar');
+
+    try {
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (res.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('crudModal')).hide();
+            fetchSlaveData();
+        } else {
+            const err = await res.json();
+            alert('Error: ' + (err.error || 'No se pudo guardar'));
+        }
+    } catch (error) {
+        alert('Error de conexión');
     }
 }
 
 window.editSlaveRow = (id) => openSlaveForm(id);
 window.deleteSlaveRow = async (id) => {
-    if (confirm('¿Eliminar registro?')) {
+    if (!confirm('¿Eliminar registro?')) return;
+    try {
         const res = await fetch(`/api/out/${currentSlaveTable}/${id}`, { method: 'DELETE' });
         if (res.ok) fetchSlaveData();
         else alert('Error al eliminar');
+    } catch (error) {
+        alert('Error de conexión');
     }
 };

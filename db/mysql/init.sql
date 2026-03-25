@@ -112,16 +112,17 @@ CREATE TABLE IF NOT EXISTS store (
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- TABLA staff con tamaños aumentados
 CREATE TABLE IF NOT EXISTS staff (
   staff_id    TINYINT UNSIGNED  NOT NULL AUTO_INCREMENT,
   first_name  VARCHAR(45)       NOT NULL,
   last_name   VARCHAR(45)       NOT NULL,
   address_id  SMALLINT UNSIGNED NOT NULL,
-  email       VARCHAR(50)       DEFAULT NULL,
+  email       VARCHAR(100)      DEFAULT NULL,          -- aumentado a 100
   store_id    TINYINT UNSIGNED  NOT NULL,
   active      TINYINT(1)        NOT NULL DEFAULT 1,
-  username    VARCHAR(16)       NOT NULL,
-  password    VARCHAR(40)       DEFAULT NULL,
+  username    VARCHAR(50)       NOT NULL,              -- aumentado a 50
+  password    VARCHAR(100)      DEFAULT NULL,          -- aumentado a 100
   last_update DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   picture     BLOB              DEFAULT NULL,
   PRIMARY KEY (staff_id),
@@ -200,10 +201,7 @@ CREATE TABLE IF NOT EXISTS payment (
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- -----------------------------------------------
--- SHADOW TABLES (_log) para tablas OUT
--- -----------------------------------------------
-
+-- SHADOW TABLES (sin cambios, se mantienen igual)
 CREATE TABLE IF NOT EXISTS customer_log (
   log_id       INT          NOT NULL AUTO_INCREMENT,
   operation    ENUM('INSERT','UPDATE','DELETE') NOT NULL,

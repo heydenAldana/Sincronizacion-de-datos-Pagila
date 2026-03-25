@@ -11,34 +11,34 @@
 <body>
     <div class="wrapper">
         <!-- Sidebar -->
-        <nav id="sidebar" class="bg-dark">
+        <div id="sidebar" class="bg-dark">
             <div class="sidebar-header">
                 <h3>Sincronizador</h3>
             </div>
             <ul class="list-unstyled components">
                 <li class="active">
-                    <a href="#dashboard" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                    <a href="#dashboardSubmenu" data-bs-toggle="collapse" aria-expanded="true" class="dropdown-toggle">
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
-                    <ul class="collapse list-unstyled show" id="dashboard">
+                    <ul class="collapse list-unstyled show" id="dashboardSubmenu">
                         <li><a href="#" data-section="dashboard">Inicio</a></li>
                     </ul>
                 </li>
                 <li>
-                    <a href="#slaveTables" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                    <a href="#slaveSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
                         <i class="bi bi-database"></i> Tablas Slave (MySQL)
                     </a>
-                    <ul class="collapse list-unstyled" id="slaveTables">
+                    <ul class="collapse list-unstyled" id="slaveSubmenu">
                         <li><a href="#" data-section="slave" data-table="customer">Clientes</a></li>
                         <li><a href="#" data-section="slave" data-table="rental">Rentas</a></li>
                         <li><a href="#" data-section="slave" data-table="payment">Pagos</a></li>
                     </ul>
                 </li>
                 <li>
-                    <a href="#masterTables" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                    <a href="#masterSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
                         <i class="bi bi-database"></i> Tablas Master (PostgreSQL)
                     </a>
-                    <ul class="collapse list-unstyled" id="masterTables">
+                    <ul class="collapse list-unstyled" id="masterSubmenu">
                         <li><a href="#" data-section="master" data-table="customer">Clientes</a></li>
                         <li><a href="#" data-section="master" data-table="rental">Rentas</a></li>
                         <li><a href="#" data-section="master" data-table="payment">Pagos</a></li>
@@ -48,15 +48,15 @@
                     </ul>
                 </li>
                 <li>
-                    <a href="#sync" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                    <a href="#syncSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
                         <i class="bi bi-arrow-repeat"></i> Sincronización
                     </a>
-                    <ul class="collapse list-unstyled" id="sync">
+                    <ul class="collapse list-unstyled" id="syncSubmenu">
                         <li><a href="#" data-section="sync">Ejecutar Sincronización</a></li>
                     </ul>
                 </li>
             </ul>
-        </nav>
+        </div>
         <!-- Page Content -->
         <div id="content">
             <nav class="navbar navbar-expand-lg navbar-light bg-light">

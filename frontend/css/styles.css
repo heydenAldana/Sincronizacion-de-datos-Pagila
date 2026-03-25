@@ -170,3 +170,12 @@ pre {
         padding: 0.2rem 0.5rem;
     }
 }
+
+#sidebar ul ul a {
+    padding-left: 40px;
+    font-size: 0.9rem;
+}
+
+#sidebar ul ul {
+    background-color: rgba(0,0,0,0.2);
+}
