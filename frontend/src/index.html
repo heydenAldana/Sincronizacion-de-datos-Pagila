@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sync Dashboard — Pagila</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>🔄 Synchronizer Dashboard</h1>
+    <span id="clock"></span>
+  </header>
+
+  <main>
+    <!-- Status Cards -->
+    <section class="cards">
+      <div class="card" id="card-pg">
+        <h3>PostgreSQL</h3>
+        <p class="status-dot" id="status-pg">— Verificando...</p>
+      </div>
+      <div class="card" id="card-my">
+        <h3>MySQL Slave</h3>
+        <p class="status-dot" id="status-my">— Verificando...</p>
+      </div>
+      <div class="card">
+        <h3>Logs Pendientes</h3>
+        <ul id="pending-logs" class="log-counts"></ul>
+      </div>
+    </section>
+
+    <!-- Sync Buttons -->
+    <section class="sync-controls">
+      <button id="btn-sync-in" class="btn btn-in">
+        ⬇ Sync IN<br><small>Master → Slave</small>
+      </button>
+      <button id="btn-sync-out" class="btn btn-out">
+        ⬆ Sync OUT<br><small>Slave → Master</small>
+      </button>
+    </section>
+
+    <!-- Progress / Status -->
+    <section class="progress-section" id="progress-section" style="display:none">
+      <p id="progress-msg">Procesando...</p>
+      <div class="spinner"></div>
+    </section>
+
+    <!-- Results Table -->
+    <section id="results-section" style="display:none">
+      <h2>Resultado de Sincronización</h2>
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th>Tabla</th>
+            <th>Insertados</th>
+            <th>Actualizados</th>
+            <th>Errores</th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </section>
+
+    <!-- History -->
+    <section>
+      <h2>Historial de Sincronizaciones</h2>
+      <div id="history-list" class="history-list"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
