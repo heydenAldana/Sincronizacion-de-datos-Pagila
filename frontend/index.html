@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sincronizador Pagila</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center">Sincronizador de Datos Pagila</h1>
+
+        <!-- Botones de sincronización -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <button id="syncInBtn" class="btn btn-primary w-100">Sincronizar IN (Master → Slave)</button>
+            </div>
+            <div class="col-md-6">
+                <button id="syncOutBtn" class="btn btn-success w-100">Sincronizar OUT (Slave → Master)</button>
+            </div>
+        </div>
+
+        <!-- Estado y logs -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Estado de Sincronización</div>
+                    <div class="card-body" id="status">
+                        Cargando...
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Últimos Logs</div>
+                    <div class="card-body" id="logs">
+                        <pre id="logContent">No hay logs aún.</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pestañas CRUD -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="customers-tab" data-bs-toggle="tab" data-bs-target="#customers"
+                    type="button" role="tab">Clientes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="rentals-tab" data-bs-toggle="tab" data-bs-target="#rentals" type="button"
+                    role="tab">Rentas</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button"
+                    role="tab">Pagos</button>
+            </li>
+        </ul>
+        <div class="tab-content mt-3">
+            <div class="tab-pane fade show active" id="customers" role="tabpanel">
+                <button class="btn btn-sm btn-success mb-2" id="addCustomerBtn">Agregar Cliente</button>
+                <table class="table table-striped" id="customersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Email</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="rentals" role="tabpanel">
+                <button class="btn btn-sm btn-success mb-2" id="addRentalBtn">Agregar Renta</button>
+                <table class="table table-striped" id="rentalsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Inventario ID</th>
+                            <th>Cliente ID</th>
+                            <th>Fecha Retorno</th>
+                            <th>Staff ID</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="payments" role="tabpanel">
+                <button class="btn btn-sm btn-success mb-2" id="addPaymentBtn">Agregar Pago</button>
+                <table class="table table-striped" id="paymentsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente ID</th>
+                            <th>Staff ID</th>
+                            <th>Renta ID</th>
+                            <th>Monto</th>
+                            <th>Fecha Pago</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para formularios -->
+    <div class="modal fade" id="formModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Formulario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="dataForm">
+                        <!-- Los campos se llenan dinámicamente con JS -->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveBtn">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/crud.js"></script>
+</body>
+
+</html>

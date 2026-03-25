@@ -1,63 +1,57 @@
+version: '3.8'
+
 services:
   postgres:
-    image: postgres:15-alpine
-    container_name: sync_master
+    image: postgres:15
+    container_name: pagila_master
     environment:
-      POSTGRES_USER: ${PG_USER}
-      POSTGRES_PASSWORD: ${PG_PASSWORD}
-      POSTGRES_DB: ${PG_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
-      - ./database/postgres:/docker-entrypoint-initdb.d
-      - pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PG_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      - ./db/postgres/01_pagila_schema.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - sync-net
 
   mysql:
-    image: mysql:8.0
-    container_name: sync_slave
+    image: mysql:8
+    container_name: pagila_slave
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DB}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
-      - ./database/mysql:/docker-entrypoint-initdb.d
-      - mysql_data:/var/lib/mysql
-    # NOTA: --default-authentication-plugin eliminado (deprecado en MySQL 8.0.34+)
-    # NOTA: --skip-host-cache viene del entrypoint base, no es controlable aqui
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      - ./db/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - sync-net
 
   backend:
     build: ./backend
     container_name: sync_backend
     environment:
-      PG_USER: ${PG_USER}
-      PG_PASSWORD: ${PG_PASSWORD}
-      PG_DB: ${PG_DB}
-      PG_HOST: postgres
+      NODE_ENV: development
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
       MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DB: ${MYSQL_DB}
-      PORT: 3000
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     ports:
       - "3000:3000"
     depends_on:
-      postgres:
-        condition: service_healthy
-      mysql:
-        condition: service_healthy
+      - postgres
+      - mysql
+    networks:
+      - sync-net
 
   frontend:
     build: ./frontend
@@ -66,7 +60,9 @@ services:
       - "5000:80"
     depends_on:
       - backend
+    networks:
+      - sync-net
 
-volumes:
-  pg_data:
-  mysql_data:
+networks:
+  sync-net:
+    driver: bridge
