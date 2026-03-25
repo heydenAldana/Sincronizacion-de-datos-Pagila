@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import outRoutes from './routes/outRoutes';
 import syncRoutes from './routes/syncRoutes';
+import masterRoutes from './routes/masterRoutes';
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 app.use('/api/out', outRoutes);
 app.use('/api/sync', syncRoutes);
+app.use('/api/master', masterRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
