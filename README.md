@@ -23,3 +23,15 @@ http://localhost:5000/
 
 * Es complicado trabajar con Node.js para la sincronización del backend, asi que después de dos intentos fallidos, med ecanté por python mejor.
 * Se eligieorn las versiones 15 de Postgres y 8.x de MySQL por temas de compatibilidad y menores complicaciones en la hora de implementar la lógica de las sincronizaciones.
+
+## Notas respecto al uso de IA:
+
+El uso de la inteligencia artificial en este proyecto ha sido con el propósito de apoyo para debugging y apoyo en las correcciones que consideré fueron complicadas de manejar por mi propia cuenta y requeria un apoyo extra. El proyecto *NO FUE GENERADO POR IA AL 100%*.
+
+Específicamente, la participación de la inteligencia artificial fue para:
+* Debugging a las funciones de sincronización, ya que presentaban fallos lógicos con respecto a la conversión de los tipos de campos al intentar sincronizar.
+* Apoyo en la generación de datos (basados en Pagila) de prueba al momento de realizar las pruebas del proyecto.
+* Apoyo en la implementación de la parte visual de las tablas en el frontend con html.
+* Debugging en la parte de la imagen del contenedor, ya que presentaba problemas debido a una mala configuración con la persistencia de datos en los volúmenes.
+* Debugging en errores menores de la interfaz.
+* Optimización del código una vez eran funcionales las funciones (no todas las funciones fueron optimizadas).
