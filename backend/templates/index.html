@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sincronizador de Base de Datos (Postgres y MySQL) — Pagila</title>
+  <title>DB Synchronizer — Pagila</title>
   <style>
     *,
     *::before,
@@ -39,7 +39,6 @@
       font-size: 24px;
       font-weight: 700;
       color: #eee;
-      letter-spacing: 0.02em;
     }
 
     h2 {
@@ -157,6 +156,13 @@
       border-color: #3a3a5a;
     }
 
+    .btn-schema {
+      color: #b8a87a;
+      border-color: #5a4a2a;
+      font-size: 13px;
+      padding: 8px 18px;
+    }
+
     @keyframes spin {
       to {
         transform: rotate(360deg);
@@ -205,10 +211,11 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #222;
     }
 
     .db-tag {
-      font-family: Arial, sans-serif;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.12em;
@@ -224,44 +231,87 @@
       margin-top: 2px;
     }
 
-    .table-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2px 10px;
-    }
-
-    .trow {
-      display: flex;
-      justify-content: space-between;
-      padding: 4px 0;
-      border-bottom: 1px solid #222;
+    .db-table-list {
+      width: 100%;
+      border-collapse: collapse;
       font-size: 14px;
     }
 
-    .trow:last-child {
+    .db-table-list th {
+      text-align: left;
+      padding: 5px 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 1px solid #222;
+    }
+
+    .db-table-list td {
+      padding: 5px 8px;
+      border-bottom: 1px solid #1e1e1e;
+      color: #bbb;
+    }
+
+    .db-table-list tr:last-child td {
       border-bottom: none;
     }
 
-    .tname {
-      color: #888;
+    .db-table-list tr:hover td {
+      background: #1e1e1e;
     }
 
-    .tval {
-      color: #ccc;
+    .db-table-list .tname {
+      color: #999;
+    }
+
+    .db-table-list .tval {
+      text-align: right;
       font-weight: 600;
+      color: #ccc;
+      font-size: 14px;
+    }
+
+    .db-table-list .ttype {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 2px;
+    }
+
+    .tag-in {
+      background: #1a2a1e;
+      color: #6aaa8a;
+      border: 1px solid #2a4a3a;
+    }
+
+    .tag-out {
+      background: #1e1a2a;
+      color: #8a7ab8;
+      border: 1px solid #3a2a5a;
+    }
+
+    .tag-log {
+      background: #2a2a1a;
+      color: #aaa07a;
+      border: 1px solid #4a4a2a;
+    }
+
+    .tag-sys {
+      background: #1e1e1e;
+      color: #666;
+      border: 1px solid #333;
     }
 
     .log-section {
       overflow-x: auto;
     }
 
-    table {
+    table.htable {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
     }
 
-    thead th {
+    table.htable thead th {
       text-align: left;
       padding: 9px 12px;
       font-size: 14px;
@@ -271,18 +321,18 @@
       white-space: nowrap;
     }
 
-    tbody td {
+    table.htable tbody td {
       padding: 9px 12px;
       border-bottom: 1px solid #1e1e1e;
       color: #bbb;
       vertical-align: top;
     }
 
-    tbody tr:last-child td {
+    table.htable tbody tr:last-child td {
       border-bottom: none;
     }
 
-    tbody tr:hover td {
+    table.htable tbody tr:hover td {
       background: #1e1e1e;
     }
 
@@ -438,6 +488,20 @@
       border-left: 3px solid #8a7a4a;
     }
 
+    .schema-result {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .schema-result.ok {
+      color: #5a9a5a;
+    }
+
+    .schema-result.err {
+      color: #9a5a5a;
+    }
+
     @media (max-width: 820px) {
       .db-grid {
         grid-template-columns: 1fr;
@@ -485,6 +549,11 @@
           <span class="btn-icon">&#8593;</span>
           Sync-OUT &mdash; Slave &rarr; Master
         </button>
+        <button class="btn btn-schema" id="btn-schema" onclick="ensureSchema()">
+          <span class="spinner"></span>
+          <span class="btn-icon">&#10003;</span>
+          Verificar Schema Slave
+        </button>
       </div>
       <div class="sync-hint">
         <strong style="color:#7ab87a">Sync-IN:</strong> Descarga las 12 tablas de cat&aacute;logo del Master
@@ -492,11 +561,12 @@
         <strong style="color:#7a7ab8">Sync-OUT:</strong> Sube los registros pendientes de customer, rental y payment al
         Master y limpia los logs.
       </div>
+      <div id="schema-result" class="schema-result"></div>
     </div>
 
     <div class="section">
       <div class="section-head">
-        <h2>Estado de las Bases de Datos</h2>
+        <h2>Tablas por Base de Datos</h2>
         <button class="refresh-btn" onclick="loadStatus()">&#8635; Actualizar</button>
       </div>
       <div class="db-grid">
@@ -511,7 +581,7 @@
               <span class="db-tag">PG</span>
             </div>
           </div>
-          <div class="table-grid" id="master-counts">
+          <div id="master-tables">
             <div class="empty">Cargando...</div>
           </div>
         </div>
@@ -526,7 +596,7 @@
               <span class="db-tag">MY</span>
             </div>
           </div>
-          <div class="table-grid" id="slave-counts">
+          <div id="slave-tables">
             <div class="empty">Cargando...</div>
           </div>
         </div>
@@ -553,6 +623,26 @@
     var currentPage = 1;
     var pageSize = 10;
 
+    var IN_TABLES = ['actor', 'category', 'language', 'film', 'film_actor', 'film_category', 'country', 'city', 'address', 'store', 'staff', 'inventory'];
+    var OUT_TABLES = ['customer', 'rental', 'payment'];
+    var LOG_TABLES = ['customer_log', 'rental_log', 'payment_log'];
+    var SYS_TABLES = ['sync_history'];
+
+    function tableType(name) {
+      if (IN_TABLES.indexOf(name) !== -1) return 'IN';
+      if (OUT_TABLES.indexOf(name) !== -1) return 'OUT';
+      if (LOG_TABLES.indexOf(name) !== -1) return 'LOG';
+      return 'SYS';
+    }
+
+    function typeBadge(name) {
+      var t = tableType(name);
+      if (t === 'IN') return '<span class="db-table-list ttype tag-in">IN</span>';
+      if (t === 'OUT') return '<span class="db-table-list ttype tag-out">OUT</span>';
+      if (t === 'LOG') return '<span class="db-table-list ttype tag-log">LOG</span>';
+      return '<span class="db-table-list ttype tag-sys">SYS</span>';
+    }
+
     function updateClock() {
       document.getElementById('clock').textContent = new Date().toLocaleTimeString('es', { hour12: false });
     }
@@ -576,23 +666,27 @@
         document.getElementById('master-dot').className = 'dot ' + (mc ? 'ok' : 'error');
         document.getElementById('slave-dot').className = 'dot ' + (sc ? 'ok' : 'error');
         document.getElementById('global-dot').className = 'dot ' + (mc && sc ? 'ok' : 'error');
-        renderCounts('master-counts', data.master ? data.master.tables : {});
-        renderCounts('slave-counts', data.slave ? data.slave.tables : {});
+        renderTables('master-tables', data.master ? data.master.tables : {});
+        renderTables('slave-tables', data.slave ? data.slave.tables : {});
       } catch (e) {
         document.getElementById('global-dot').className = 'dot error';
       }
     }
 
-    function renderCounts(id, tables) {
+    function renderTables(id, tables) {
       var el = document.getElementById(id);
       var entries = tables ? Object.entries(tables) : [];
       if (entries.length === 0) {
-        el.innerHTML = '<div class="empty" style="grid-column:1/-1">Sin datos</div>';
+        el.innerHTML = '<div class="empty">Sin tablas detectadas.</div>';
         return;
       }
-      el.innerHTML = entries.map(function (pair) {
-        return '<div class="trow"><span class="tname">' + pair[0] + '</span><span class="tval">' + (pair[1] < 0 ? '&mdash;' : Number(pair[1]).toLocaleString('es')) + '</span></div>';
-      }).join('');
+      var html = '<table class="db-table-list"><thead><tr><th>Tabla</th><th>Tipo</th><th style="text-align:right">Filas</th></tr></thead><tbody>';
+      entries.forEach(function (pair) {
+        var name = pair[0], cnt = pair[1];
+        html += '<tr><td class="tname">' + name + '</td><td>' + typeBadge(name) + '</td><td class="tval">' + (cnt < 0 ? '&mdash;' : Number(cnt).toLocaleString('es')) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+      el.innerHTML = html;
     }
 
     async function loadHistory() {
@@ -621,7 +715,7 @@
       var end = Math.min(start + pageSize, total);
       var pageRows = allHistory.slice(start, end);
 
-      var html = '<table><thead><tr><th>Fecha y Hora</th><th>Tipo</th><th>Estado</th><th>Tablas Afectadas</th><th>Filas</th><th>Duraci&oacute;n</th><th>Observaciones</th></tr></thead><tbody>';
+      var html = '<table class="htable"><thead><tr><th>Fecha y Hora</th><th>Tipo</th><th>Estado</th><th>Tablas Afectadas</th><th>Filas</th><th>Duraci&oacute;n</th><th>Observaciones</th></tr></thead><tbody>';
 
       pageRows.forEach(function (r) {
         var dt = new Date(r.started_at);
@@ -633,15 +727,11 @@
         var typeClass = r.sync_type === 'IN' ? 'badge-in' : 'badge-out';
         var tablas = r.tables_synced || '&mdash;';
         var obs;
-        if (r.error_detail)
-          obs = r.error_detail;
-        else if (r.status === 'success') 
-          obs = 'Sincronizaci\u00f3n completada sin errores.';
-        else if (r.status === 'partial') 
-          obs = 'Algunas tablas no se sincronizaron correctamente.';
-        else 
-          obs = '&mdash;';
-        
+        if (r.error_detail) { obs = r.error_detail; }
+        else if (r.status === 'success') { obs = 'Sincronizaci\u00f3n completada sin errores.'; }
+        else if (r.status === 'partial') { obs = 'Algunas tablas no se sincronizaron correctamente.'; }
+        else { obs = '&mdash;'; }
+
         html += '<tr><td style="white-space:nowrap">' + fecha + ' ' + hora + '</td><td><span class="badge ' + typeClass + '">' + r.sync_type + '</span></td><td><span class="badge ' + statusClass + '">' + r.status.toUpperCase() + '</span></td><td style="max-width:220px">' + tablas + '</td><td>' + (r.rows_affected != null ? r.rows_affected : '&mdash;') + '</td><td style="white-space:nowrap">' + dur + '</td><td class="obs-cell">' + obs + '</td></tr>';
       });
 
@@ -659,11 +749,11 @@
       var pageButtons = '';
       if (startPage > 1) pageButtons += '<button class="page-btn" onclick="goPage(1)">1</button>';
       if (startPage > 2) pageButtons += '<button class="page-btn" disabled>&hellip;</button>';
-      for (var p = startPage; p <= endPage; p++)
+      for (var p = startPage; p <= endPage; p++) {
         pageButtons += '<button class="page-btn' + (p === currentPage ? ' active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+      }
       if (endPage < totalPages - 1) pageButtons += '<button class="page-btn" disabled>&hellip;</button>';
       if (endPage < totalPages) pageButtons += '<button class="page-btn" onclick="goPage(' + totalPages + ')">' + totalPages + '</button>';
-
       pag.innerHTML = '<span class="page-info">Mostrando ' + from + '&ndash;' + to + ' de ' + total + ' registros</span><div class="page-btns"><button class="page-btn" onclick="goPage(' + (currentPage - 1) + ')" ' + (currentPage === 1 ? 'disabled' : '') + '>&#8249; Anterior</button>' + pageButtons + '<button class="page-btn" onclick="goPage(' + (currentPage + 1) + ')" ' + (currentPage === totalPages ? 'disabled' : '') + '>Siguiente &#8250;</button></div>';
     }
 
@@ -673,6 +763,33 @@
       currentPage = p;
       renderHistoryPage();
       document.getElementById('log-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function ensureSchema() {
+      var btn = document.getElementById('btn-schema');
+      var res_el = document.getElementById('schema-result');
+      btn.disabled = true;
+      btn.classList.add('running');
+      res_el.textContent = '';
+      try {
+        var data = await fetch('/api/ensure-schema', { method: 'POST' }).then(function (r) { return r.json(); });
+        if (data.ok) {
+          res_el.className = 'schema-result ok';
+          res_el.textContent = '\u2713 Schema del Slave verificado: tablas _log y triggers activos.';
+          showToast('Schema verificado correctamente.', 'success');
+        } else {
+          res_el.className = 'schema-result err';
+          res_el.textContent = '\u26A0 Advertencias: ' + (data.errors || []).join(' | ');
+          showToast('Schema con advertencias.', 'partial');
+        }
+      } catch (e) {
+        res_el.className = 'schema-result err';
+        res_el.textContent = 'Error de red: ' + e.message;
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('running');
+        loadStatus();
+      }
     }
 
     async function triggerSync(direction) {
