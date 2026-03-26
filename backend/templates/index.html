@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sincronizador de Base de Datos (Postgres y MySQL) — Pagila</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      background: #111;
+      color: #ddd;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    header {
+      background: #1a1a1a;
+      border-bottom: 1px solid #2e2e2e;
+      padding: 16px 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #eee;
+      letter-spacing: 0.02em;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #ccc;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #bbb;
+    }
+
+    .header-meta {
+      font-size: 14px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #444;
+      display: inline-block;
+      transition: background 0.3s;
+    }
+
+    .dot.ok {
+      background: #4a8a4a;
+      box-shadow: 0 0 5px #4a8a4a99;
+    }
+
+    .dot.error {
+      background: #8a4a4a;
+      box-shadow: 0 0 5px #8a4a4a99;
+    }
+
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .section {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 4px;
+      padding: 24px 26px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .section-title {
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .sync-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .btn {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 28px;
+      border-radius: 3px;
+      border: 1px solid;
+      background: #222;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      transition: background 0.15s;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #2a2a2a;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .btn-in {
+      color: #7ab87a;
+      border-color: #3a5a3a;
+    }
+
+    .btn-out {
+      color: #7a7ab8;
+      border-color: #3a3a5a;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spinner {
+      width: 13px;
+      height: 13px;
+      border: 2px solid #444;
+      border-top-color: #aaa;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    .btn.running .spinner {
+      display: block;
+    }
+
+    .btn.running .btn-icon {
+      display: none;
+    }
+
+    .sync-hint {
+      font-size: 14px;
+      color: #555;
+      line-height: 2;
+    }
+
+    .db-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .db-box {
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 3px;
+      padding: 16px 18px;
+    }
+
+    .db-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .db-tag {
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 2px 8px;
+      border-radius: 2px;
+      border: 1px solid #3a3a3a;
+      color: #aaa;
+    }
+
+    .db-sub {
+      font-size: 12px;
+      color: #555;
+      margin-top: 2px;
+    }
+
+    .table-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 10px;
+    }
+
+    .trow {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid #222;
+      font-size: 14px;
+    }
+
+    .trow:last-child {
+      border-bottom: none;
+    }
+
+    .tname {
+      color: #888;
+    }
+
+    .tval {
+      color: #ccc;
+      font-weight: 600;
+    }
+
+    .log-section {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 9px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #888;
+      border-bottom: 2px solid #2a2a2a;
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #1e1e1e;
+      color: #bbb;
+      vertical-align: top;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover td {
+      background: #1e1e1e;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 2px;
+      letter-spacing: 0.06em;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .badge-success {
+      background: #1e3a1e;
+      color: #6ab86a;
+      border: 1px solid #2e5a2e;
+    }
+
+    .badge-error {
+      background: #3a1e1e;
+      color: #b86a6a;
+      border: 1px solid #5a2e2e;
+    }
+
+    .badge-partial {
+      background: #3a2e1a;
+      color: #b8a05a;
+      border: 1px solid #5a4a2a;
+    }
+
+    .badge-in {
+      background: #1a2a1e;
+      color: #6aaa8a;
+      border: 1px solid #2a4a3a;
+    }
+
+    .badge-out {
+      background: #1e1a2a;
+      color: #8a7ab8;
+      border: 1px solid #3a2a5a;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .page-info {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .page-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .page-btn {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      padding: 5px 14px;
+      border: 1px solid #2e2e2e;
+      border-radius: 3px;
+      background: #1e1e1e;
+      color: #aaa;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .page-btn:hover:not(:disabled) {
+      background: #2a2a2a;
+    }
+
+    .page-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .page-btn.active {
+      background: #2e2e2e;
+      color: #eee;
+      border-color: #444;
+    }
+
+    .empty {
+      font-size: 14px;
+      color: #444;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .refresh-btn {
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      color: #555;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 3px 8px;
+      border-radius: 2px;
+      transition: color 0.15s;
+    }
+
+    .refresh-btn:hover {
+      color: #888;
+    }
+
+    .obs-cell {
+      font-size: 14px;
+      color: #777;
+      max-width: 240px;
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      min-width: 260px;
+      max-width: 420px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #ddd;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+      z-index: 999;
+      line-height: 1.5;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #toast.success {
+      border-left: 3px solid #4a8a4a;
+    }
+
+    #toast.error {
+      border-left: 3px solid #8a4a4a;
+    }
+
+    #toast.partial {
+      border-left: 3px solid #8a7a4a;
+    }
+
+    @media (max-width: 820px) {
+      .db-grid {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        padding: 20px 16px;
+      }
+
+      header {
+        padding: 14px 16px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>DB Synchronizer &mdash; Pagila</h1>
+    <div class="header-meta">
+      <span id="clock">--:--:--</span>
+      <span class="dot" id="global-dot"></span>
+    </div>
+  </header>
+
+  <main>
+
+    <div class="section">
+      <div class="section-title">
+        <h2>Sincronizaci&oacute;n</h2>
+      </div>
+      <div class="sync-row">
+        <button class="btn btn-in" id="btn-sync-in" onclick="triggerSync('in')">
+          <span class="spinner"></span>
+          <span class="btn-icon">&#8595;</span>
+          Sync-IN &mdash; Master &rarr; Slave
+        </button>
+        <button class="btn btn-out" id="btn-sync-out" onclick="triggerSync('out')">
+          <span class="spinner"></span>
+          <span class="btn-icon">&#8593;</span>
+          Sync-OUT &mdash; Slave &rarr; Master
+        </button>
+      </div>
+      <div class="sync-hint">
+        <strong style="color:#7ab87a">Sync-IN:</strong> Descarga las 12 tablas de cat&aacute;logo del Master
+        (PostgreSQL) al Slave (MySQL). Evita duplicados.<br>
+        <strong style="color:#7a7ab8">Sync-OUT:</strong> Sube los registros pendientes de customer, rental y payment al
+        Master y limpia los logs.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Estado de las Bases de Datos</h2>
+        <button class="refresh-btn" onclick="loadStatus()">&#8635; Actualizar</button>
+      </div>
+      <div class="db-grid">
+        <div class="db-box">
+          <div class="db-header">
+            <div>
+              <h3 style="margin-bottom:3px">Master</h3>
+              <div class="db-sub">PostgreSQL &middot; pagila</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="dot" id="master-dot"></span>
+              <span class="db-tag">PG</span>
+            </div>
+          </div>
+          <div class="table-grid" id="master-counts">
+            <div class="empty">Cargando...</div>
+          </div>
+        </div>
+        <div class="db-box">
+          <div class="db-header">
+            <div>
+              <h3 style="margin-bottom:3px">Slave</h3>
+              <div class="db-sub">MySQL &middot; pagila_slave</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="dot" id="slave-dot"></span>
+              <span class="db-tag">MY</span>
+            </div>
+          </div>
+          <div class="table-grid" id="slave-counts">
+            <div class="empty">Cargando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Historial de Sincronizaciones</h2>
+        <button class="refresh-btn" onclick="loadHistory()">&#8635; Actualizar</button>
+      </div>
+      <div class="log-section" id="log-wrap">
+        <div class="empty">Sin registros a&uacute;n.</div>
+      </div>
+      <div class="pagination" id="log-pagination" style="display:none"></div>
+    </div>
+
+  </main>
+
+  <div id="toast"></div>
+
+  <script>
+    var allHistory = [];
+    var currentPage = 1;
+    var pageSize = 10;
+
+    function updateClock() {
+      document.getElementById('clock').textContent = new Date().toLocaleTimeString('es', { hour12: false });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    var toastTimer;
+    function showToast(msg, type) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'show ' + (type || 'success');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.className = ''; }, 4500);
+    }
+
+    async function loadStatus() {
+      try {
+        var data = await fetch('/api/status').then(function (r) { return r.json(); });
+        var mc = data.master && data.master.connected;
+        var sc = data.slave && data.slave.connected;
+        document.getElementById('master-dot').className = 'dot ' + (mc ? 'ok' : 'error');
+        document.getElementById('slave-dot').className = 'dot ' + (sc ? 'ok' : 'error');
+        document.getElementById('global-dot').className = 'dot ' + (mc && sc ? 'ok' : 'error');
+        renderCounts('master-counts', data.master ? data.master.tables : {});
+        renderCounts('slave-counts', data.slave ? data.slave.tables : {});
+      } catch (e) {
+        document.getElementById('global-dot').className = 'dot error';
+      }
+    }
+
+    function renderCounts(id, tables) {
+      var el = document.getElementById(id);
+      var entries = tables ? Object.entries(tables) : [];
+      if (entries.length === 0) {
+        el.innerHTML = '<div class="empty" style="grid-column:1/-1">Sin datos</div>';
+        return;
+      }
+      el.innerHTML = entries.map(function (pair) {
+        return '<div class="trow"><span class="tname">' + pair[0] + '</span><span class="tval">' + (pair[1] < 0 ? '&mdash;' : Number(pair[1]).toLocaleString('es')) + '</span></div>';
+      }).join('');
+    }
+
+    async function loadHistory() {
+      try {
+        allHistory = await fetch('/api/history?limit=200').then(function (r) { return r.json(); });
+        currentPage = 1;
+        renderHistoryPage();
+      } catch (e) {
+        document.getElementById('log-wrap').innerHTML = '<div class="empty">Error al cargar historial.</div>';
+      }
+    }
+
+    function renderHistoryPage() {
+      var wrap = document.getElementById('log-wrap');
+      var pag = document.getElementById('log-pagination');
+
+      if (!allHistory || allHistory.length === 0) {
+        wrap.innerHTML = '<div class="empty">Sin registros a&uacute;n.</div>';
+        pag.style.display = 'none';
+        return;
+      }
+
+      var total = allHistory.length;
+      var totalPages = Math.ceil(total / pageSize);
+      var start = (currentPage - 1) * pageSize;
+      var end = Math.min(start + pageSize, total);
+      var pageRows = allHistory.slice(start, end);
+
+      var html = '<table><thead><tr><th>Fecha y Hora</th><th>Tipo</th><th>Estado</th><th>Tablas Afectadas</th><th>Filas</th><th>Duraci&oacute;n</th><th>Observaciones</th></tr></thead><tbody>';
+
+      pageRows.forEach(function (r) {
+        var dt = new Date(r.started_at);
+        var fin = r.finished_at ? new Date(r.finished_at) : null;
+        var dur = fin ? ((fin - dt) / 1000).toFixed(2) + ' s' : '&mdash;';
+        var fecha = dt.toLocaleDateString('es', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        var hora = dt.toLocaleTimeString('es', { hour12: false });
+        var statusClass = r.status === 'success' ? 'badge-success' : r.status === 'error' ? 'badge-error' : 'badge-partial';
+        var typeClass = r.sync_type === 'IN' ? 'badge-in' : 'badge-out';
+        var tablas = r.tables_synced || '&mdash;';
+        var obs;
+        if (r.error_detail)
+          obs = r.error_detail;
+        else if (r.status === 'success') 
+          obs = 'Sincronizaci\u00f3n completada sin errores.';
+        else if (r.status === 'partial') 
+          obs = 'Algunas tablas no se sincronizaron correctamente.';
+        else 
+          obs = '&mdash;';
+        
+        html += '<tr><td style="white-space:nowrap">' + fecha + ' ' + hora + '</td><td><span class="badge ' + typeClass + '">' + r.sync_type + '</span></td><td><span class="badge ' + statusClass + '">' + r.status.toUpperCase() + '</span></td><td style="max-width:220px">' + tablas + '</td><td>' + (r.rows_affected != null ? r.rows_affected : '&mdash;') + '</td><td style="white-space:nowrap">' + dur + '</td><td class="obs-cell">' + obs + '</td></tr>';
+      });
+
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+
+      pag.style.display = 'flex';
+      var from = start + 1;
+      var to = end;
+      var maxVisible = 5;
+      var startPage = Math.max(1, currentPage - 2);
+      var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+      if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+
+      var pageButtons = '';
+      if (startPage > 1) pageButtons += '<button class="page-btn" onclick="goPage(1)">1</button>';
+      if (startPage > 2) pageButtons += '<button class="page-btn" disabled>&hellip;</button>';
+      for (var p = startPage; p <= endPage; p++)
+        pageButtons += '<button class="page-btn' + (p === currentPage ? ' active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+      if (endPage < totalPages - 1) pageButtons += '<button class="page-btn" disabled>&hellip;</button>';
+      if (endPage < totalPages) pageButtons += '<button class="page-btn" onclick="goPage(' + totalPages + ')">' + totalPages + '</button>';
+
+      pag.innerHTML = '<span class="page-info">Mostrando ' + from + '&ndash;' + to + ' de ' + total + ' registros</span><div class="page-btns"><button class="page-btn" onclick="goPage(' + (currentPage - 1) + ')" ' + (currentPage === 1 ? 'disabled' : '') + '>&#8249; Anterior</button>' + pageButtons + '<button class="page-btn" onclick="goPage(' + (currentPage + 1) + ')" ' + (currentPage === totalPages ? 'disabled' : '') + '>Siguiente &#8250;</button></div>';
+    }
+
+    function goPage(p) {
+      var totalPages = Math.ceil(allHistory.length / pageSize);
+      if (p < 1 || p > totalPages) return;
+      currentPage = p;
+      renderHistoryPage();
+      document.getElementById('log-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function triggerSync(direction) {
+      var btnId = direction === 'in' ? 'btn-sync-in' : 'btn-sync-out';
+      var btn = document.getElementById(btnId);
+      btn.disabled = true;
+      btn.classList.add('running');
+      try {
+        var res = await fetch('/api/sync/' + direction, { method: 'POST' });
+        var data = await res.json();
+        var status = data.status || 'error';
+        var rows = data.rows_affected != null ? data.rows_affected : 0;
+        var dur = data.duration_ms ? (data.duration_ms / 1000).toFixed(2) + ' s' : '';
+        if (status === 'success') 
+          showToast('Sync-' + direction.toUpperCase() + ' completado \u00b7 ' + rows + ' filas \u00b7 ' + dur, 'success');
+        else if (status === 'partial') 
+          showToast('Sync-' + direction.toUpperCase() + ' parcial \u00b7 ' + rows + ' filas \u00b7 ' + (data.errors ? data.errors.length : 0) + ' errores', 'partial');
+        else 
+          showToast('Sync-' + direction.toUpperCase() + ' fallido \u00b7 ' + (data.errors ? data.errors[0] : 'Error desconocido'), 'error');
+      } catch (e) {
+        showToast('Error de red: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('running');
+        loadStatus();
+        loadHistory();
+      }
+    }
+    loadStatus();
+    loadHistory();
+    setInterval(loadStatus, 30000);
+  </script>
+</body>
+
+</html>

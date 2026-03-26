@@ -1,68 +1,84 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: pagila_master
+
+  master_db:
+    image: postgres:15-alpine
+    container_name: sync_master
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: pagila_user
+      POSTGRES_PASSWORD: masterpass123
+      POSTGRES_DB: pagila
+    volumes:
+      - ./db/master:/docker-entrypoint-initdb.d
+      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    volumes:
-      - ./db/postgres:/docker-entrypoint-initdb.d
     networks:
-      - sync-net
+      - sync_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pagila_user -d pagila"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  mysql:
-    image: mysql:8
-    container_name: pagila_slave
+  slave_db:
+    image: mysql:8.0
+    container_name: sync_slave
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: rootpass123
+      MYSQL_DATABASE: pagila_slave
+      MYSQL_USER: slave_user
+      MYSQL_PASSWORD: slavepass123
+    volumes:
+      - ./db/slave:/docker-entrypoint-initdb.d
+      - mysqldata:/var/lib/mysql
     ports:
       - "3306:3306"
-    volumes:
-      - ./db/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - sync-net
+      - sync_net
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "slave_user", "-pslavepass123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
     container_name: sync_backend
+    restart: unless-stopped
     environment:
-      NODE_ENV: development
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MASTER_HOST: master_db
+      MASTER_PORT: 5432
+      MASTER_DB: pagila
+      MASTER_USER: pagila_user
+      MASTER_PASSWORD: masterpass123
+      SLAVE_HOST: slave_db
+      SLAVE_PORT: 3306
+      SLAVE_DB: pagila_slave
+      SLAVE_USER: slave_user
+      SLAVE_PASSWORD: slavepass123
+    volumes:
+      - ./mapping.json:/app/mapping.json
+      - sync_logs:/app/logs
     ports:
-      - "3000:3000"
+      - "5000:5000"
     depends_on:
-      - postgres
-      - mysql
+      master_db:
+        condition: service_healthy
+      slave_db:
+        condition: service_healthy
     networks:
-      - sync-net
+      - sync_net
 
-  frontend:
-    build: ./frontend
-    container_name: sync_frontend
-    ports:
-      - "5000:80"
-    depends_on:
-      - backend
-    networks:
-      - sync-net
+volumes:
+  pgdata:
+  mysqldata:
+  sync_logs:
 
 networks:
-  sync-net:
+  sync_net:
     driver: bridge

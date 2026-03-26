@@ -1,0 +1,533 @@
+{
+  "_comment": "Mapa de sincronizacion entre SLAVE (MySQL) y MASTER (PostgreSQL). Este permitiria nombres de tabla/campo distintos entre motores.",
+  "version": "1.0.0",
+  "sync_in": {
+    "description": "Tablas de flujo de MASTER a SLAVE (solo lectura en el Slave)",
+    "tables": {
+      "actor": {
+        "master_table": "actor",
+        "slave_table": "actor",
+        "primary_key": "actor_id",
+        "fields": {
+          "actor_id": {
+            "master": "actor_id",
+            "slave": "actor_id",
+            "type": "int"
+          },
+          "first_name": {
+            "master": "first_name",
+            "slave": "first_name",
+            "type": "varchar"
+          },
+          "last_name": {
+            "master": "last_name",
+            "slave": "last_name",
+            "type": "varchar"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "category": {
+        "master_table": "category",
+        "slave_table": "category",
+        "primary_key": "category_id",
+        "fields": {
+          "category_id": {
+            "master": "category_id",
+            "slave": "category_id",
+            "type": "int"
+          },
+          "name": {
+            "master": "name",
+            "slave": "name",
+            "type": "varchar"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "language": {
+        "master_table": "language",
+        "slave_table": "language",
+        "primary_key": "language_id",
+        "fields": {
+          "language_id": {
+            "master": "language_id",
+            "slave": "language_id",
+            "type": "int"
+          },
+          "name": {
+            "master": "name",
+            "slave": "name",
+            "type": "varchar"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "film": {
+        "master_table": "film",
+        "slave_table": "film",
+        "primary_key": "film_id",
+        "fields": {
+          "film_id": {
+            "master": "film_id",
+            "slave": "film_id",
+            "type": "int"
+          },
+          "title": {
+            "master": "title",
+            "slave": "title",
+            "type": "varchar"
+          },
+          "description": {
+            "master": "description",
+            "slave": "description",
+            "type": "text"
+          },
+          "release_year": {
+            "master": "release_year",
+            "slave": "release_year",
+            "type": "int"
+          },
+          "language_id": {
+            "master": "language_id",
+            "slave": "language_id",
+            "type": "int"
+          },
+          "rental_duration": {
+            "master": "rental_duration",
+            "slave": "rental_duration",
+            "type": "int"
+          },
+          "rental_rate": {
+            "master": "rental_rate",
+            "slave": "rental_rate",
+            "type": "decimal"
+          },
+          "length": {
+            "master": "length",
+            "slave": "length",
+            "type": "int"
+          },
+          "replacement_cost": {
+            "master": "replacement_cost",
+            "slave": "replacement_cost",
+            "type": "decimal"
+          },
+          "rating": {
+            "master": "rating",
+            "slave": "rating",
+            "type": "varchar"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "film_actor": {
+        "master_table": "film_actor",
+        "slave_table": "film_actor",
+        "primary_key": [
+          "actor_id",
+          "film_id"
+        ],
+        "fields": {
+          "actor_id": {
+            "master": "actor_id",
+            "slave": "actor_id",
+            "type": "int"
+          },
+          "film_id": {
+            "master": "film_id",
+            "slave": "film_id",
+            "type": "int"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "film_category": {
+        "master_table": "film_category",
+        "slave_table": "film_category",
+        "primary_key": [
+          "film_id",
+          "category_id"
+        ],
+        "fields": {
+          "film_id": {
+            "master": "film_id",
+            "slave": "film_id",
+            "type": "int"
+          },
+          "category_id": {
+            "master": "category_id",
+            "slave": "category_id",
+            "type": "int"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "country": {
+        "master_table": "country",
+        "slave_table": "country",
+        "primary_key": "country_id",
+        "fields": {
+          "country_id": {
+            "master": "country_id",
+            "slave": "country_id",
+            "type": "int"
+          },
+          "country": {
+            "master": "country",
+            "slave": "country",
+            "type": "varchar"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "city": {
+        "master_table": "city",
+        "slave_table": "city",
+        "primary_key": "city_id",
+        "fields": {
+          "city_id": {
+            "master": "city_id",
+            "slave": "city_id",
+            "type": "int"
+          },
+          "city": {
+            "master": "city",
+            "slave": "city",
+            "type": "varchar"
+          },
+          "country_id": {
+            "master": "country_id",
+            "slave": "country_id",
+            "type": "int"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "address": {
+        "master_table": "address",
+        "slave_table": "address",
+        "primary_key": "address_id",
+        "fields": {
+          "address_id": {
+            "master": "address_id",
+            "slave": "address_id",
+            "type": "int"
+          },
+          "address": {
+            "master": "address",
+            "slave": "address",
+            "type": "varchar"
+          },
+          "address2": {
+            "master": "address2",
+            "slave": "address2",
+            "type": "varchar"
+          },
+          "district": {
+            "master": "district",
+            "slave": "district",
+            "type": "varchar"
+          },
+          "city_id": {
+            "master": "city_id",
+            "slave": "city_id",
+            "type": "int"
+          },
+          "postal_code": {
+            "master": "postal_code",
+            "slave": "postal_code",
+            "type": "varchar"
+          },
+          "phone": {
+            "master": "phone",
+            "slave": "phone",
+            "type": "varchar"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "store": {
+        "master_table": "store",
+        "slave_table": "store",
+        "primary_key": "store_id",
+        "fields": {
+          "store_id": {
+            "master": "store_id",
+            "slave": "store_id",
+            "type": "int"
+          },
+          "manager_staff_id": {
+            "master": "manager_staff_id",
+            "slave": "manager_staff_id",
+            "type": "int"
+          },
+          "address_id": {
+            "master": "address_id",
+            "slave": "address_id",
+            "type": "int"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "staff": {
+        "master_table": "staff",
+        "slave_table": "staff",
+        "primary_key": "staff_id",
+        "fields": {
+          "staff_id": {
+            "master": "staff_id",
+            "slave": "staff_id",
+            "type": "int"
+          },
+          "first_name": {
+            "master": "first_name",
+            "slave": "first_name",
+            "type": "varchar"
+          },
+          "last_name": {
+            "master": "last_name",
+            "slave": "last_name",
+            "type": "varchar"
+          },
+          "address_id": {
+            "master": "address_id",
+            "slave": "address_id",
+            "type": "int"
+          },
+          "email": {
+            "master": "email",
+            "slave": "email",
+            "type": "varchar"
+          },
+          "store_id": {
+            "master": "store_id",
+            "slave": "store_id",
+            "type": "int"
+          },
+          "active": {
+            "master": "active",
+            "slave": "active",
+            "type": "boolean"
+          },
+          "username": {
+            "master": "username",
+            "slave": "username",
+            "type": "varchar"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "inventory": {
+        "master_table": "inventory",
+        "slave_table": "inventory",
+        "primary_key": "inventory_id",
+        "fields": {
+          "inventory_id": {
+            "master": "inventory_id",
+            "slave": "inventory_id",
+            "type": "int"
+          },
+          "film_id": {
+            "master": "film_id",
+            "slave": "film_id",
+            "type": "int"
+          },
+          "store_id": {
+            "master": "store_id",
+            "slave": "store_id",
+            "type": "int"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      }
+    }
+  },
+  "sync_out": {
+    "description": "Tablas de flujo de SLAVE a MASTER (actividad transaccional local)",
+    "tables": {
+      "customer": {
+        "master_table": "customer",
+        "slave_table": "customer",
+        "log_table": "customer_log",
+        "primary_key": "customer_id",
+        "fields": {
+          "customer_id": {
+            "master": "customer_id",
+            "slave": "customer_id",
+            "type": "int"
+          },
+          "store_id": {
+            "master": "store_id",
+            "slave": "store_id",
+            "type": "int"
+          },
+          "first_name": {
+            "master": "first_name",
+            "slave": "first_name",
+            "type": "varchar"
+          },
+          "last_name": {
+            "master": "last_name",
+            "slave": "last_name",
+            "type": "varchar"
+          },
+          "email": {
+            "master": "email",
+            "slave": "email",
+            "type": "varchar"
+          },
+          "address_id": {
+            "master": "address_id",
+            "slave": "address_id",
+            "type": "int"
+          },
+          "active": {
+            "master": "active",
+            "slave": "active",
+            "type": "boolean"
+          },
+          "create_date": {
+            "master": "create_date",
+            "slave": "create_date",
+            "type": "date"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "rental": {
+        "master_table": "rental",
+        "slave_table": "rental",
+        "log_table": "rental_log",
+        "primary_key": "rental_id",
+        "fields": {
+          "rental_id": {
+            "master": "rental_id",
+            "slave": "rental_id",
+            "type": "int"
+          },
+          "rental_date": {
+            "master": "rental_date",
+            "slave": "rental_date",
+            "type": "datetime"
+          },
+          "inventory_id": {
+            "master": "inventory_id",
+            "slave": "inventory_id",
+            "type": "int"
+          },
+          "customer_id": {
+            "master": "customer_id",
+            "slave": "customer_id",
+            "type": "int"
+          },
+          "return_date": {
+            "master": "return_date",
+            "slave": "return_date",
+            "type": "datetime"
+          },
+          "staff_id": {
+            "master": "staff_id",
+            "slave": "staff_id",
+            "type": "int"
+          },
+          "last_update": {
+            "master": "last_update",
+            "slave": "last_update",
+            "type": "datetime"
+          }
+        }
+      },
+      "payment": {
+        "master_table": "payment",
+        "slave_table": "payment",
+        "log_table": "payment_log",
+        "primary_key": "payment_id",
+        "fields": {
+          "payment_id": {
+            "master": "payment_id",
+            "slave": "payment_id",
+            "type": "int"
+          },
+          "customer_id": {
+            "master": "customer_id",
+            "slave": "customer_id",
+            "type": "int"
+          },
+          "staff_id": {
+            "master": "staff_id",
+            "slave": "staff_id",
+            "type": "int"
+          },
+          "rental_id": {
+            "master": "rental_id",
+            "slave": "rental_id",
+            "type": "int"
+          },
+          "amount": {
+            "master": "amount",
+            "slave": "amount",
+            "type": "decimal"
+          },
+          "payment_date": {
+            "master": "payment_date",
+            "slave": "payment_date",
+            "type": "datetime"
+          }
+        }
+      }
+    }
+  }
+}
